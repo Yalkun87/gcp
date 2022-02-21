@@ -1,0 +1,5 @@
+#!/usr/bin/bash
+sudo apt-get -y install nginx
+sudo cat <<EOF > /var/www/html/index.nginx-debian.html
+<html><body><p>Hello from Yalkun Mametsupiyev</p></body>
+EOF
