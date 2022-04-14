@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gcsfuse-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gcsfuse-test
+  template:
+    metadata:
+      labels:
+        app: gcsfuse-test
+    spec:
+      nodeSelector:
+        cloud.google.com/gke-nodepool: my-node-pool
+      containers:
+        - name: gcsfuse-test
+          image: gcr.io/mythic-handler-341608/gcs-fuse:latest
+          ports:
+            - containerPort: 80
+          securityContext:
+            privileged: true
+            capabilities:
+              add:
+                - SYS_ADMIN
+          lifecycle:
+            postStart:
+              exec:
+                command: ["gcsfuse", "-o", "allow_other", "page-store", "/usr/share/nginx/html"]
+            preStop:
+              exec:
+                command: ["fusermount", "-u", "/usr/share/nginx/html"]
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-webapp
+  labels:
+    app: gcsfuse-test
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    app: gcsfuse-test
+  type: LoadBalancer
